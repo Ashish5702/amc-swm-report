@@ -284,9 +284,50 @@ const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
 const toDate = s => new Date(s + 'T00:00:00');
 const fmtDate = s => toDate(s).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
 
-/* ================= SERVER API (Netlify Function + Blobs) =================
-   trip = [date, shift, ward, vehicle, netKg, time, uniqueKey] */
-async function api(action, {method = 'GET', query = {}, body} = {}) {
+/* ================= STORAGE: Netlify (online) or TEST MODE (browser) =================
+   trip = [date, shift, ward, vehicle, netKg, time, uniqueKey]
+   TEST MODE runs automatically on GitHub Pages or when the file is opened from your computer. */
+const LOCAL = location.protocol === 'file:' || /github\.io$/.test(location.hostname);
+const LOCAL_KEY = 'amc_swm_test_v4';
+const LOCAL_PASSWORD = 'amc@123';
+
+function summarizeDay(day) {
+  let N = 0, D = 0, net = 0; const wards = new Set(), veh = new Set();
+  for (const t of day.trips) { if (t[1] === 'Night') N++; else D++; net += t[4]; wards.add(t[2]); veh.add(t[2] + '|' + t[3]); }
+  return {N, D, net, wards: [...wards].sort(), vehicles: veh.size, files: day.files.length};
+}
+
+function localApi(action, {method = 'GET', query = {}, body} = {}) {
+  const err = (m, status) => Object.assign(new Error(m), {status});
+  let db; try { db = JSON.parse(localStorage.getItem(LOCAL_KEY)) || {days: {}}; } catch { db = {days: {}}; }
+  const save = () => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(db)); } catch { throw err('Browser storage is full. Delete old dates first.', 500); } };
+
+  if (method === 'GET') {
+    if (action === 'summary') { const s = {}; for (const d in db.days) s[d] = summarizeDay(db.days[d]); return s; }
+    if (action === 'trips') return {trips: Object.keys(db.days).filter(d => d >= query.from && d <= query.to).sort().flatMap(d => db.days[d].trips)};
+    throw err('Unknown action', 400);
+  }
+  if (sessionStorage.getItem('amc_key') !== LOCAL_PASSWORD) throw err('Wrong password', 401);
+  if (action === 'login') return {ok: true};
+  if (action === 'save') {
+    let added = 0, updated = 0; const idx = {}, at = new Date().toISOString();
+    for (const t of body.trips) {
+      const d = t[0], day = db.days[d] || (db.days[d] = {trips: [], files: []});
+      const m = idx[d] || (idx[d] = new Map(day.trips.map((x, i) => [x[6], i])));
+      if (m.has(t[6])) { day.trips[m.get(t[6])] = t; updated++; }
+      else { m.set(t[6], day.trips.length); day.trips.push(t); added++; }
+    }
+    for (const f of body.files) for (const d of (f.dates || [])) if (db.days[d]) db.days[d].files.push({f: f.f, shift: f.shift, n: f.n, at});
+    save(); return {added, updated};
+  }
+  if (action === 'date') { delete db.days[query.date]; save(); return {ok: true}; }
+  if (action === 'all') { db.days = {}; save(); return {ok: true}; }
+  throw err('Unknown action', 400);
+}
+
+async function api(action, opts = {}) {
+  if (LOCAL) return localApi(action, opts);
+  const {method = 'GET', query = {}, body} = opts;
   const qs = new URLSearchParams({action, ...query}).toString();
   const headers = {};
   const key = sessionStorage.getItem('amc_key');
@@ -296,6 +337,12 @@ async function api(action, {method = 'GET', query = {}, body} = {}) {
   let data = {}; try { data = await res.json(); } catch {}
   if (!res.ok) { const e = new Error(data.error || `Server error ${res.status}`); e.status = res.status; throw e; }
   return data;
+}
+
+if (LOCAL) {
+  $('btnUp').setAttribute('href', '#/upload');
+  $('btnDash').setAttribute('href', '#/dashboard');
+  document.querySelector('footer').innerHTML = '<b style="color:#b7791f">TEST MODE</b> · running without Netlify · data is saved only in this browser · upload password: amc@123';
 }
 
 /* ================= ROUTER: /upload (or #/upload) → upload, else dashboard ================= */
