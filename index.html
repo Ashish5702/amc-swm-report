@@ -10,6 +10,7 @@
 <style>
 :root{--bg:#f4f6f9;--card:#fff;--ink:#1d2433;--muted:#667085;--line:#e6e8ec;--blue:#2a78d6;--green:#12a26b;--red:#d93a3a;--teal:#0f8b8d;--purple:#6250d6;--navy:#12355b;--radius:14px}
 *{box-sizing:border-box}
+html{scroll-behavior:smooth}
 body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
 .hidden{display:none!important}
 .top{background:var(--navy);color:#fff;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
@@ -40,6 +41,10 @@ input[type=search]{min-width:220px}
 .tag button{border:none;background:none;color:inherit;cursor:pointer;padding:0;font-size:15px;display:flex}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;gap:12px;align-items:center}
+.kpi.click{cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s}
+.kpi.click:hover,.kpi.click:focus-visible{transform:translateY(-2px);box-shadow:0 6px 16px rgba(16,24,40,.08);border-color:#cfd6e0;outline:none}
+.kpi-go{margin-left:auto;color:var(--muted);font-size:18px;opacity:0;transition:opacity .12s}
+.kpi.click:hover .kpi-go,.kpi.click:focus-visible .kpi-go{opacity:1}
 .kpi-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex-shrink:0}
 .kpi-label{font-size:13px;color:var(--muted)}
 .kpi-value{font-size:24px;font-weight:600;margin-top:2px}
@@ -50,10 +55,13 @@ input[type=search]{min-width:220px}
 .kpi.red .kpi-icon{background:#fdeaea;color:var(--red)}
 .kpi.green .kpi-value{color:var(--green)}
 .kpi.red .kpi-value{color:var(--red)}
+.flash{animation:flash 1.3s ease}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(42,120,214,.55)}100%{box-shadow:0 0 0 14px rgba(42,120,214,0)}}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:18px;margin-bottom:18px}
 .grid2 .card{margin-bottom:0}
 .chart{position:relative}
 .table-wrap{overflow-x:auto}
+.tbl-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{background:#f7f8fa;color:var(--muted);font-weight:500;text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -111,7 +119,7 @@ details pre{max-height:260px;overflow:auto;background:#f7f8fa;padding:10px;borde
 .modal{position:fixed;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
 .modal-box{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:85vh;overflow:auto;padding:20px}
 @media (max-width:640px){main{padding:12px}.top{padding:14px 16px}.grid2{grid-template-columns:1fr}input[type=search]{min-width:0;width:100%}}
-@media print{.top-actions,.filters,#search{display:none!important}body{background:#fff}.top{background:#fff;color:var(--ink);border-bottom:2px solid var(--navy)}.card,.kpi{break-inside:avoid}}
+@media print{.top-actions,.filters,#search,#viewSel{display:none!important}body{background:#fff}.top{background:#fff;color:var(--ink);border-bottom:2px solid var(--navy)}.card,.kpi{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -177,10 +185,18 @@ details pre{max-height:260px;overflow:auto;background:#f7f8fa;padding:10px;borde
       <div class="chart" style="height:280px"><canvas id="trendChart"></canvas></div>
     </section>
 
-    <section class="card">
+    <section class="card" id="listCard">
       <div class="card-h">
-        <h2><i class="ti ti-alert-triangle red"></i><span id="tblTitle">Below 750 kg vehicles</span></h2>
-        <input type="search" id="search" placeholder="Search vehicle or ward">
+        <h2><i id="tblIcon" class="ti ti-alert-triangle red"></i><span id="tblTitle">Below 750 kg vehicles</span></h2>
+        <div class="tbl-tools">
+          <select id="viewSel" aria-label="Choose list">
+            <option value="below">Below 750 kg vehicles</option>
+            <option value="avg">All vehicles · lowest avg first</option>
+            <option value="trips">All vehicles · most trips first</option>
+            <option value="net">All vehicles · highest net kg first</option>
+          </select>
+          <input type="search" id="search" placeholder="Search vehicle or ward">
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -364,7 +380,13 @@ window.addEventListener('hashchange', route);
    ===================================================== */
 const BANDS = [['Below 500',0,500,'#d03b3b'],['500–650',500,650,'#ec835a'],['650–750',650,750,'#fab219'],['750–900',750,900,'#1baf7a'],['900+',900,Infinity,'#0f6e56']];
 const bandOf = avg => BANDS.findIndex(([, lo, hi]) => avg >= lo && avg < hi);
-const st = {from:'', to:'', shift:'all', ward:'', band:-1, search:'', latest:null, trips:[], days:[], rows:[], lowRows:[], keySet:null, loadId:0};
+const VIEWS = {
+  below: {title: 'Below 750 kg vehicles',              sort: (a, b) => a.avg - b.avg},
+  avg:   {title: 'All vehicles · lowest avg first',    sort: (a, b) => a.avg - b.avg},
+  trips: {title: 'All vehicles · most trips first',    sort: (a, b) => b.trips - a.trips || a.avg - b.avg},
+  net:   {title: 'All vehicles · highest net kg first', sort: (a, b) => b.net - a.net}
+};
+const st = {from:'', to:'', shift:'all', ward:'', band:-1, view:'below', search:'', latest:null, trips:[], days:[], rows:[], lowRows:[], keySet:null, loadId:0};
 const charts = {};
 let trendMeta = [];
 Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
@@ -442,7 +464,21 @@ function fillWards() {
   $('wardSel').innerHTML = '<option value="">All wards</option>' + wards.map(w => `<option ${w === st.ward ? 'selected' : ''}>${esc(w)}</option>`).join('');
 }
 function setWard(w) { st.ward = w; $('wardSel').value = w; render(); window.scrollTo({top: 0, behavior: 'smooth'}); }
-function setBand(i) { st.band = st.band === i ? -1 : i; render(); }
+function setBand(i) {
+  st.band = st.band === i ? -1 : i;
+  st.view = st.band >= 0 ? 'avg' : 'below';
+  $('viewSel').value = st.view;
+  render();
+}
+// KPI card click → choose the list, scroll down to it and flash it
+function showList(view) {
+  if (view === 'below' && st.band >= 0 && BANDS[st.band][1] >= T) st.band = -1;   // a 750+ band would make the below list empty
+  st.view = view; $('viewSel').value = view;
+  render();
+  const card = $('listCard');
+  card.scrollIntoView({behavior: 'smooth', block: 'start'});
+  card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+}
 
 function vehicleRows() {
   const map = new Map();
@@ -488,14 +524,19 @@ function renderKpis(rows) {
   const low = new Set(rows.filter(r => r.avg < T).map(r => r.vehicle)).size;
   const pct = veh ? low / veh * 100 : 0;
   const cards = [
-    ['ti-truck','Vehicles',fmt(veh),'blue'],
-    ['ti-route','Total trips',fmt(trips),'purple'],
-    ['ti-weight','Net weight',(net/1000).toLocaleString('en-IN',{maximumFractionDigits:1})+' t','teal'],
-    ['ti-scale','Avg kg / trip',fmt(avg),avg >= T ? 'green' : 'red'],
-    ['ti-alert-triangle','Below 750 kg',fmt(low),'red'],
-    ['ti-percentage','Below 750 share',pct.toFixed(1)+'%','red'],
+    ['ti-truck','Vehicles',fmt(veh),'blue','avg'],
+    ['ti-route','Total trips',fmt(trips),'purple','trips'],
+    ['ti-weight','Net weight',(net/1000).toLocaleString('en-IN',{maximumFractionDigits:1})+' t','teal','net'],
+    ['ti-scale','Avg kg / trip',fmt(avg),avg >= T ? 'green' : 'red','avg'],
+    ['ti-alert-triangle','Below 750 kg',fmt(low),'red','below'],
+    ['ti-percentage','Below 750 share',pct.toFixed(1)+'%','red','below'],
   ];
-  $('kpis').innerHTML = cards.map(([i,l,v,c]) => `<div class="kpi ${c}"><div class="kpi-icon"><i class="ti ${i}"></i></div><div><div class="kpi-label">${l}</div><div class="kpi-value">${v}</div></div></div>`).join('');
+  $('kpis').innerHTML = cards.map(([i,l,v,c,view]) => `
+    <div class="kpi click ${c}" data-view="${view}" role="button" tabindex="0" title="Click to see the list">
+      <div class="kpi-icon"><i class="ti ${i}"></i></div>
+      <div><div class="kpi-label">${l}</div><div class="kpi-value">${v}</div></div>
+      <i class="ti ti-chevron-down kpi-go"></i>
+    </div>`).join('');
 }
 
 function renderWardChart(all) {
@@ -567,12 +608,14 @@ function renderTrend() {
 
 function renderTable() {
   const q = st.search.trim().toLowerCase();
-  const banded = st.band >= 0;
-  st.lowRows = st.rows.filter(r => (banded || r.avg < T) && (!q || r.vehicle.toLowerCase().includes(q) || r.ward.toLowerCase().includes(q))).sort((a, b) => a.avg - b.avg);
-  $('tblTitle').textContent = banded
-    ? `Vehicles averaging ${BANDS[st.band][0]} kg · ${st.ward || 'all wards'} (${st.lowRows.length})`
-    : `Below 750 kg vehicles · ${st.ward || 'all wards'} (${st.lowRows.length})`;
-  $('tbody').innerHTML = st.lowRows.length ? st.lowRows.map((r, i) => `<tr>
+  let list = st.rows.filter(r => !q || r.vehicle.toLowerCase().includes(q) || r.ward.toLowerCase().includes(q));
+  if (st.view === 'below') list = list.filter(r => r.avg < T);
+  list.sort(VIEWS[st.view].sort);
+  st.lowRows = list;
+  const bandTxt = st.band >= 0 ? ` · ${BANDS[st.band][0]} kg band` : '';
+  $('tblTitle').textContent = `${VIEWS[st.view].title} · ${st.ward || 'all wards'}${bandTxt} (${list.length})`;
+  $('tblIcon').className = 'ti ' + (st.view === 'below' ? 'ti-alert-triangle red' : 'ti-list-details');
+  $('tbody').innerHTML = list.length ? list.map((r, i) => `<tr>
     <td>${i+1}</td>
     <td><a class="link ward-link" data-w="${esc(r.ward)}">${esc(r.ward)}</a></td>
     <td class="mono"><a class="link veh-link" data-w="${esc(r.ward)}" data-v="${esc(r.vehicle)}">${esc(r.vehicle)}</a></td>
@@ -582,7 +625,7 @@ function renderTable() {
       ? `<span class="pill ${r.avg < 600 ? 'bad' : 'warn'}">−${fmt(T - r.avg)} kg</span>`
       : `<span class="pill good">+${fmt(r.avg - T)} kg</span>`}</td>
     <td class="num">${r.below} / ${r.days}</td></tr>`).join('')
-    : `<tr><td colspan="9" class="empty">${banded ? 'No vehicles in this band for this selection.' : 'No vehicles below 750 kg for this selection.'}</td></tr>`;
+    : `<tr><td colspan="9" class="empty">${st.view === 'below' ? 'No vehicles below 750 kg for this selection.' : 'No vehicles for this selection.'}</td></tr>`;
 }
 
 /* ---------- Vehicle detail ---------- */
@@ -619,7 +662,7 @@ function exportExcel() {
     .sort((a, b) => (a[0] + a[2] + a[3] + a[5]).localeCompare(b[0] + b[2] + b[3] + b[5]))
     .map(t => ({'Date': t[0], 'Shift': t[1], 'Time': t[5], 'Ward': t[2], 'Vehicle No': t[3], 'Net KG': t[4]}));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(st.lowRows.map(toRow)), st.band >= 0 ? `Band ${st.band + 1}` : 'Below 750');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(st.lowRows.map(toRow)), st.view === 'below' ? 'Below 750' : (st.band >= 0 ? `Band ${st.band + 1}` : 'Vehicle list'));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([...st.rows].sort((a, b) => a.ward.localeCompare(b.ward) || a.avg - b.avg).map(toRow)), 'All vehicles');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trips), 'All trips');
   XLSX.writeFile(wb, `AMC_North_SWM_${st.from}_to_${st.to}${st.ward ? '_' + st.ward.replace(/\s+/g, '_') : ''}_${st.shift}.xlsx`);
@@ -632,7 +675,10 @@ document.querySelectorAll('#shiftSeg button').forEach(b => b.onclick = () => {
   b.classList.add('on'); st.shift = b.dataset.s; render();
 });
 $('wardSel').onchange = e => setWard(e.target.value);
+$('viewSel').onchange = e => { st.view = e.target.value; renderTable(); };
 $('search').oninput = e => { st.search = e.target.value; renderTable(); };
+$('kpis').onclick = e => { const k = e.target.closest('.kpi[data-view]'); if (k) showList(k.dataset.view); };
+$('kpis').onkeydown = e => { const k = e.target.closest('.kpi[data-view]'); if (k && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); showList(k.dataset.view); } };
 $('tbody').onclick = e => {
   const v = e.target.closest('.veh-link'); if (v) return openVehicle(v.dataset.w, v.dataset.v);
   const a = e.target.closest('.ward-link'); if (a) setWard(a.dataset.w);
@@ -709,6 +755,11 @@ function parseReport(raw) {
 
   const ct = t.match(/Contract_Type\s*:-\s*([^,]+),/);
   if (ct && !/DOOR/i.test(ct[1])) return {...res, error: `Contract type is "${ct[1].trim()}", not door-to-door.`};
+  // RTS transfer / container-truck reports (e.g. Earth Care Management): no Wet/Dry columns, 7–12 tonne trips → not door-to-door
+  if (f === 'B' && !/Wet\s*Wt/i.test(t)) {
+    const ag = ((t.match(/Agency_Name\s*:-\s*([^,]+),/) || [])[1] || '').trim();
+    return {...res, error: `Not a door-to-door report${ag ? ' (' + ag + ')' : ''}: RTS transfer/container trucks. Skipped automatically.`};
+  }
 
   const hd = t.match(/Date\s*:-?\s*(\d{2})\/(\d{2})\/(\d{4})/);
   const headerDate = hd ? `${hd[3]}-${hd[2]}-${hd[1]}` : null;
@@ -790,6 +841,8 @@ function parseReport(raw) {
   if (mathWarn) res.warn.push(`${mathWarn} row(s) where Wet + Dry = Net could not be found.`);
   if (otherGroup) res.warn.push(`${otherGroup} non door-to-door trip(s) skipped.`);
   if (res.wards.includes('UNKNOWN')) res.warn.push('Ward name not found for some trips.');
+  const heavy = res.trips.filter(x => x[4] > 3000).length;
+  if (heavy) res.warn.push(`${heavy} trip(s) above 3,000 kg. Please check this is a door-to-door report.`);
   if (example && (bad || mathWarn)) res.warn.push('Example row text: ' + example);
   return res;
 }
@@ -887,7 +940,7 @@ function renderUploads() {
         <td>${f.dates ? f.dates.map(fmtDate).join(', ') : '—'}</td>
         <td class="num">${f.trips && !f.error ? f.trips.length : '—'}</td>
         <td class="mono">${f.tmin ? `${f.tmin}–${f.tmax}` : '—'}</td>
-        <td class="num">${f.net ? fmt(f.net) : '—'}</td>
+        <td class="num">${f.net && !f.error ? fmt(f.net) : '—'}</td>
         <td>${checkCell(f)}</td>
         <td><button class="icon-btn" data-rm="${i}" aria-label="Remove file"><i class="ti ti-x"></i></button></td></tr>`).join('')}</tbody>
     </table></div>
@@ -901,8 +954,8 @@ function renderUploads() {
         <td class="num" style="color:${avg < T ? 'var(--red)' : 'var(--green)'}">${fmt(avg)}</td><td class="num">${low}</td></tr>`; }).join('')}</tbody>
     </table></div>` : ''}
     ${problems.length ? `<div class="section-title">Needs attention</div>` + problems.map(f => `
-      <div class="warn-box"><b>${esc(f.name)}</b>${(f.warn || []).map(w => `<br>• ${esc(w)}`).join('')}${f.match === false ? `<br>• Read ${f.trips.length} trips · ${fmt(f.net)} kg, but the report total is ${f.footer.trips} trips · ${fmt(f.footer.net)} kg.` : ''}
-      ${f.raw ? `<details><summary>Show extracted text — send this to the developer</summary><pre>${esc(f.raw.split('\n').slice(0, 80).join('\n'))}</pre></details>` : ''}</div>`).join('') : ''}
+      <div class="warn-box"><b>${esc(f.name)}</b>${f.error ? `<br>• ${esc(f.error)}` : ''}${(f.warn || []).map(w => `<br>• ${esc(w)}`).join('')}${f.match === false ? `<br>• Read ${f.trips.length} trips · ${fmt(f.net)} kg, but the report total is ${f.footer.trips} trips · ${fmt(f.footer.net)} kg.` : ''}
+      ${f.raw ? `<details><summary>Show extracted text (send this to the developer)</summary><pre>${esc(f.raw.split('\n').slice(0, 80).join('\n'))}</pre></details>` : ''}</div>`).join('') : ''}
   `;
 }
 $('fileOut').onclick = e => { const b = e.target.closest('button[data-rm]'); if (b) { up.files.splice(+b.dataset.rm, 1); renderUploads(); } };
@@ -914,18 +967,19 @@ $('resetBtn').onclick = () => { up.files = []; renderUploads(); $('saveMsg').tex
 $('saveBtn').onclick = async () => {
   if (up.files.some(f => f.loading)) return msg('Please wait until all files are read.', true);
   const ok = up.files.filter(f => !f.error && f.trips && f.trips.length);
-  if (!ok.length) return msg('Add at least one report PDF that was read correctly.', true);
+  if (!ok.length) return msg('Add at least one door-to-door report PDF that was read correctly.', true);
   const map = new Map();
   for (const f of ok) for (const t of tripsOf(f)) map.set(t[6], t);
   const trips = [...map.values()];
   const files = ok.map(f => ({f: f.name, shift: f.shift, dates: f.dates, n: f.trips.length}));
+  const skipped = up.files.length - ok.length;
   $('saveBtn').disabled = true; msg(`Saving ${fmt(trips.length)} trips…`);
   try {
     const r = await api('save', {method: 'POST', body: {trips, files}});
-    msg(`Saved ${fmt(r.added)} new trips${r.updated ? ` (${fmt(r.updated)} already existed and were updated)` : ''}.`);
+    msg(`Saved ${fmt(r.added)} new trips${r.updated ? ` (${fmt(r.updated)} already existed and were updated)` : ''}${skipped ? ` · ${skipped} file(s) skipped` : ''}.`);
     up.files = []; renderUploads(); renderHistory(); st.from = '';
   } catch (e) {
-    msg('Save failed: ' + e.message + (e.status === 401 ? ' — please Lock and log in again.' : ''), true);
+    msg('Save failed: ' + e.message + (e.status === 401 ? '. Please Lock and log in again.' : ''), true);
   } finally { $('saveBtn').disabled = false; }
 };
 
@@ -943,7 +997,7 @@ async function renderHistory() {
       <td><button class="icon-btn" data-del="${d}" aria-label="Delete date"><i class="ti ti-trash"></i></button></td></tr>`; }).join('')
     : '<tr><td colspan="9" class="empty">No data saved yet.</td></tr>';
   const total = dates.reduce((a, d) => a + s[d].N + s[d].D, 0);
-  $('storageInfo').textContent = `${dates.length} days · ${fmt(total)} trips saved online`;
+  $('storageInfo').textContent = `${dates.length} days · ${fmt(total)} trips saved ${LOCAL ? 'in this browser' : 'online'}`;
 }
 $('histBody').onclick = async e => {
   const b = e.target.closest('button[data-del]'); if (!b) return;
@@ -953,7 +1007,7 @@ $('histBody').onclick = async e => {
   catch (err) { msg('Delete failed: ' + err.message, true); }
 };
 $('clearBtn').onclick = async () => {
-  const ans = prompt('This deletes ALL saved data for everyone. Type DELETE to confirm.');
+  const ans = prompt('This deletes ALL saved data. Type DELETE to confirm.');
   if (ans !== 'DELETE') return;
   try { await api('all', {method: 'DELETE'}); msg('All data cleared.'); renderHistory(); st.from = ''; }
   catch (err) { msg('Clear failed: ' + err.message, true); }
