@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMC North Zone · SWM Vehicle Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#1d2433;--muted:#667085;--line:#e6e8ec;--blue:#2a78d6;--green:#12a26b;--red:#d93a3a;--teal:#0f8b8d;--purple:#6250d6;--navy:#12355b;--radius:14px}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+.hidden{display:none!important}
+.top{background:var(--navy);color:#fff;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:24px}
+.top h1{margin:0;font-size:21px;font-weight:600}
+.top p{margin:2px 0 0;opacity:.8;font-size:13px}
+.top-actions{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;padding:8px 14px;border-radius:10px;font:500 14px Inter,sans-serif;cursor:pointer;text-decoration:none}
+.btn:hover{background:rgba(255,255,255,.12)}
+main{max-width:1280px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.card-h h2{margin:0;font-size:16px;font-weight:600;display:flex;align-items:center;gap:6px}
+.hint{font-size:12px;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.presets,.seg,.range{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip,.seg button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;border-radius:999px;font:500 13px Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.chip.on,.seg button.on{background:#e8f1fc;border-color:var(--blue);color:var(--blue)}
+.range label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+input[type=date],select,input[type=search],input[type=password]{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:14px Inter,sans-serif;color:var(--ink);background:#fff}
+input[type=search]{min-width:220px}
+.status{font-size:14px;color:var(--muted);margin-bottom:8px}
+.status.err{color:var(--red)}
+.crumb{margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.crumb-text{font-size:14px;color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:8px;background:#e8f1fc;color:var(--blue);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:500}
+.tag button{border:none;background:none;color:inherit;cursor:pointer;padding:0;font-size:15px;display:flex}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;gap:12px;align-items:center}
+.kpi-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.kpi-label{font-size:13px;color:var(--muted)}
+.kpi-value{font-size:24px;font-weight:600;margin-top:2px}
+.kpi.blue .kpi-icon{background:#e8f1fc;color:var(--blue)}
+.kpi.purple .kpi-icon{background:#eeedfe;color:var(--purple)}
+.kpi.teal .kpi-icon{background:#e1f5ee;color:var(--teal)}
+.kpi.green .kpi-icon{background:#e3f6ec;color:var(--green)}
+.kpi.red .kpi-icon{background:#fdeaea;color:var(--red)}
+.kpi.green .kpi-value{color:var(--green)}
+.kpi.red .kpi-value{color:var(--red)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:18px;margin-bottom:18px}
+.grid2 .card{margin-bottom:0}
+.chart{position:relative}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:#f7f8fa;color:var(--muted);font-weight:500;text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody tr:hover td{background:#fafbfc}
+.num{text-align:right}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.pill{padding:3px 9px;border-radius:999px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.pill.bad{background:#fdeaea;color:#a32d2d}
+.pill.warn{background:#fff3dc;color:#8a5a00}
+.pill.good{background:#e3f6ec;color:#0e7a50}
+.pill.night{background:#eeedfe;color:#4b3cc0}
+.pill.day{background:#fff3dc;color:#8a5a00}
+.link{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);cursor:pointer}
+.red{color:var(--red)}
+.empty{text-align:center;color:var(--muted);padding:24px}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state i{font-size:44px;color:var(--muted)}
+.empty-state a{color:var(--blue)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+.lock{max-width:400px;margin:60px auto;text-align:center}
+.lock>i{font-size:40px;color:var(--blue)}
+.lock h2{margin:8px 0 4px}
+.lock p{color:var(--muted);font-size:14px;margin:0}
+.lock form{display:flex;gap:8px;margin-top:16px}
+.lock input{flex:1}
+.err-text{color:var(--red);font-size:13px;margin-top:8px;min-height:18px}
+.btn-primary{background:var(--blue);color:#fff;border:none;padding:9px 16px;border-radius:10px;font:600 14px Inter,sans-serif;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn-primary:hover{background:#1f65b8}
+.btn-primary:disabled{opacity:.6;cursor:wait}
+.btn-ghost{background:#fff;border:1px solid var(--line);padding:7px 12px;border-radius:10px;font:500 13px Inter,sans-serif;cursor:pointer;display:inline-flex;gap:6px;align-items:center;color:var(--ink)}
+.btn-ghost:hover{background:#f7f8fa}
+.btn-ghost.danger{color:var(--red)}
+.icon-btn{border:none;background:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px}
+.icon-btn:hover{color:var(--red)}
+.drop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:12px 0 16px}
+.drop{border:2px dashed #cdd3dc;border-radius:14px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center;transition:background .15s,border-color .15s}
+.drop i{font-size:34px}
+.drop.day i{color:#d98a00}
+.drop.night i{color:var(--purple)}
+.drop.day:hover,.drop.day.over{border-color:#d98a00;background:#fffaf0}
+.drop.night:hover,.drop.night.over{border-color:var(--purple);background:#f6f5ff}
+.drop span{font-size:13px;color:var(--muted)}
+.shift-sel{padding:4px 8px;font-size:13px;border-radius:8px}
+.section-title{font-size:14px;font-weight:600;margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.mini{font-size:12px;background:#f2f4f7;padding:4px 9px;border-radius:999px}
+.mini b{font-weight:600}
+.warn-box{background:#fff8e6;color:#7a5200;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+details{margin-top:8px;font-size:13px}
+details summary{cursor:pointer;color:var(--muted)}
+details pre{max-height:260px;overflow:auto;background:#f7f8fa;padding:10px;border-radius:8px;font-size:12px;white-space:pre-wrap}
+.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.msg{font-size:14px}.msg.ok{color:var(--green)}.msg.bad{color:var(--red)}
+.small{font-size:12px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.modal-box{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:85vh;overflow:auto;padding:20px}
+@media (max-width:640px){main{padding:12px}.top{padding:14px 16px}.grid2{grid-template-columns:1fr}input[type=search]{min-width:0;width:100%}}
+@media print{.top-actions,.filters,#search{display:none!important}body{background:#fff}.top{background:#fff;color:var(--ink);border-bottom:2px solid var(--navy)}.card,.kpi{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo"><i class="ti ti-recycle"></i></div>
+    <div><h1>AMC North Zone</h1><p>SWM · Door-to-door vehicle performance</p></div>
+  </div>
+  <div class="top-actions">
+    <button id="btnExcel" class="btn"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+    <button id="btnPrint" class="btn"><i class="ti ti-printer"></i> Print / PDF</button>
+    <a id="btnUp" class="btn" href="/upload"><i class="ti ti-upload"></i> Upload</a>
+    <a id="btnDash" class="btn hidden" href="/"><i class="ti ti-layout-dashboard"></i> Open dashboard</a>
+  </div>
+</header>
+
+<!-- ===================== DASHBOARD ===================== -->
+<main id="viewDashboard">
+  <section id="dashEmpty" class="card empty-state hidden">
+    <i class="ti ti-database-off"></i>
+    <h2>No data yet</h2>
+    <p class="hint" id="dashEmptyMsg">Daily reports have not been uploaded yet.</p>
+  </section>
+
+  <div id="dashBody" class="hidden">
+    <section class="card filters">
+      <div class="presets" id="presets">
+        <button class="chip on" data-p="latest">Latest day</button>
+        <button class="chip" data-p="yesterday">Yesterday</button>
+        <button class="chip" data-p="7">Last 7 days</button>
+        <button class="chip" data-p="month">This month</button>
+      </div>
+      <div class="range">
+        <label>From <input type="date" id="dFrom"></label>
+        <label>To <input type="date" id="dTo"></label>
+      </div>
+      <div class="seg" id="shiftSeg">
+        <button class="on" data-s="all">Combined</button>
+        <button data-s="Day"><i class="ti ti-sun"></i> Day</button>
+        <button data-s="Night"><i class="ti ti-moon"></i> Night</button>
+      </div>
+      <select id="wardSel"><option value="">All wards</option></select>
+    </section>
+
+    <div id="status" class="status"></div>
+    <div id="crumb" class="crumb"></div>
+    <section class="kpis" id="kpis"></section>
+
+    <section class="grid2">
+      <div class="card">
+        <div class="card-h"><h2>Ward-wise avg kg per trip</h2><span class="hint">Click a bar to open that ward</span></div>
+        <div class="chart" id="wardBox"><canvas id="wardChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Vehicles by performance band</h2><span class="hint" id="bandHint"></span></div>
+        <div class="chart" style="height:340px"><canvas id="bandChart"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><h2>Daily trend · avg kg per trip</h2><span class="hint">Dashed line = 750 kg target · red dot = below target</span></div>
+      <div class="chart" style="height:280px"><canvas id="trendChart"></canvas></div>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <h2><i class="ti ti-alert-triangle red"></i><span id="tblTitle">Below 750 kg vehicles</span></h2>
+        <input type="search" id="search" placeholder="Search vehicle or ward">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Ward</th><th>Vehicle no</th><th>Shift</th><th class="num">Trips</th><th class="num">Net kg</th><th class="num">Avg / trip</th><th class="num">vs 750 kg</th><th class="num">Days below</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="small" style="margin-top:8px">Click a vehicle number to see its trip-by-trip details.</div>
+    </section>
+  </div>
+</main>
+
+<!-- ===================== UPLOAD ===================== -->
+<main id="viewUpload" class="hidden">
+  <section id="lockBox" class="card lock">
+    <i class="ti ti-lock"></i>
+    <h2>Operator login</h2>
+    <p>Enter the upload password to continue.</p>
+    <form id="lockForm">
+      <input type="password" id="pwd" placeholder="Password" autocomplete="current-password">
+      <button class="btn-primary" type="submit"><i class="ti ti-lock-open"></i> Unlock</button>
+    </form>
+    <div id="pwdErr" class="err-text"></div>
+  </section>
+
+  <div id="uploadArea" class="hidden">
+    <section class="card">
+      <div class="card-h">
+        <h2><i class="ti ti-upload"></i> Upload weighbridge reports</h2>
+        <button class="btn-ghost" id="lockBtn"><i class="ti ti-logout"></i> Lock</button>
+      </div>
+      <div class="small">Drop Day shift reports in the Day box and Night shift reports in the Night box. Date and ward are read from the PDF. You can change a file's shift in the table below.</div>
+      <div class="drop-grid">
+        <label class="drop day" id="dropDay">
+          <input type="file" id="fileDay" accept=".pdf" multiple hidden>
+          <i class="ti ti-sun"></i><b>Day shift PDFs</b><span>Drop here or click · many files at once</span>
+        </label>
+        <label class="drop night" id="dropNight">
+          <input type="file" id="fileNight" accept=".pdf" multiple hidden>
+          <i class="ti ti-moon"></i><b>Night shift PDFs</b><span>Drop here or click · many files at once</span>
+        </label>
+      </div>
+      <div id="fileOut"></div>
+      <div class="actions">
+        <button class="btn-primary" id="saveBtn"><i class="ti ti-device-floppy"></i> Save to dashboard</button>
+        <button class="btn-ghost" id="resetBtn"><i class="ti ti-refresh"></i> Clear files</button>
+        <span id="saveMsg" class="msg"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <h2><i class="ti ti-history"></i> Saved data by date</h2>
+        <div class="actions">
+          <span class="small" id="storageInfo"></span>
+          <button class="btn-ghost danger" id="clearBtn"><i class="ti ti-trash"></i> Clear all data</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th class="num">Wards</th><th class="num">Vehicles</th><th class="num">Night trips</th><th class="num">Day trips</th><th class="num">Net kg</th><th class="num">Avg / trip</th><th class="num">Files</th><th></th></tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Vehicle detail modal -->
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="card-h"><h2 id="mTitle"></h2><button class="icon-btn" id="mClose" aria-label="Close"><i class="ti ti-x"></i></button></div>
+    <div id="mBody"></div>
+  </div>
+</div>
+
+<footer>AMC North Zone · Solid Waste Management · Target 750 kg per trip</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+/* ================= SETTINGS ================= */
+const T = 750;                 // target kg per trip
+const API = '/api/data';       // Netlify Function (password lives on the server)
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const WARD_NAMES = {
+  ASARVA: 'ASARVA', BAPUNAGAR: 'BAPUNAGAR', INDIACOLONY: 'INDIA COLONY', KUBERNAGAR: 'KUBERNAGAR',
+  NARODA12: 'NARODA-12', SAIJPURBOGHA: 'SAIJPUR-BOGHA', SARASPURRAKHIYAL: 'SARASPUR-RAKHIYAL',
+  SARDARNAGAR: 'SARDARNAGAR', THAKKARBAPANAGAR: 'THAKKARBAPANAGAR', SPARE: 'SPARE'
+};
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('en-IN');
+const sum = (a, k) => a.reduce((s, r) => s + r[k], 0);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const toDate = s => new Date(s + 'T00:00:00');
+const fmtDate = s => toDate(s).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+
+/* ================= SERVER API (Netlify Function + Blobs) =================
+   trip = [date, shift, ward, vehicle, netKg, time, uniqueKey] */
+async function api(action, {method = 'GET', query = {}, body} = {}) {
+  const qs = new URLSearchParams({action, ...query}).toString();
+  const headers = {};
+  const key = sessionStorage.getItem('amc_key');
+  if (key) headers['x-upload-key'] = key;
+  if (body) headers['content-type'] = 'application/json';
+  const res = await fetch(`${API}?${qs}`, {method, headers, body: body ? JSON.stringify(body) : undefined});
+  let data = {}; try { data = await res.json(); } catch {}
+  if (!res.ok) { const e = new Error(data.error || `Server error ${res.status}`); e.status = res.status; throw e; }
+  return data;
+}
+
+/* ================= ROUTER: /upload (or #/upload) → upload, else dashboard ================= */
+const isUploadRoute = () => /\/upload\/?$/.test(location.pathname) || location.hash.startsWith('#/upload');
+function route() {
+  const up = isUploadRoute();
+  $('viewUpload').classList.toggle('hidden', !up);
+  $('viewDashboard').classList.toggle('hidden', up);
+  $('btnExcel').classList.toggle('hidden', up);
+  $('btnPrint').classList.toggle('hidden', up);
+  $('btnUp').classList.toggle('hidden', up);
+  $('btnDash').classList.toggle('hidden', !up);
+  if (up) initUpload(); else initDashboard();
+}
+window.addEventListener('hashchange', route);
+
+/* =====================================================
+   DASHBOARD
+   ===================================================== */
+const BANDS = [['Below 500',0,500,'#d03b3b'],['500–650',500,650,'#ec835a'],['650–750',650,750,'#fab219'],['750–900',750,900,'#1baf7a'],['900+',900,Infinity,'#0f6e56']];
+const bandOf = avg => BANDS.findIndex(([, lo, hi]) => avg >= lo && avg < hi);
+const st = {from:'', to:'', shift:'all', ward:'', band:-1, search:'', latest:null, trips:[], days:[], rows:[], lowRows:[], keySet:null, loadId:0};
+const charts = {};
+let trendMeta = [];
+Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+Chart.defaults.color = '#667085';
+
+const targetLine = axis => ({ id: 'target', afterDraw(ch) {
+  const s = ch.scales[axis], a = ch.chartArea, g = ch.ctx, p = s.getPixelForValue(T);
+  if (axis === 'x' ? (p < a.left || p > a.right) : (p < a.top || p > a.bottom)) return;
+  g.save(); g.setLineDash([6,4]); g.strokeStyle = '#52514e'; g.lineWidth = 1.5; g.beginPath();
+  if (axis === 'x') { g.moveTo(p, a.top); g.lineTo(p, a.bottom); } else { g.moveTo(a.left, p); g.lineTo(a.right, p); }
+  g.stroke(); g.restore();
+}});
+const barLabels = { id: 'barLabels', afterDatasetsDraw(ch) {
+  const g = ch.ctx, meta = ch.getDatasetMeta(0);
+  g.save(); g.font = '600 13px Inter, sans-serif'; g.fillStyle = '#1d2433'; g.textAlign = 'center'; g.textBaseline = 'bottom';
+  meta.data.forEach((bar, i) => { const v = ch.data.datasets[0].data[i]; if (v > 0) g.fillText(v, bar.x, bar.y - 4); });
+  g.restore();
+}};
+function mkChart(id, cfg) { if (charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), cfg); return charts[id]; }
+function showStatus(m, err = false) { $('status').textContent = m; $('status').className = 'status' + (err ? ' err' : ''); }
+const shiftLabel = () => st.shift === 'all' ? 'Combined' : st.shift + ' shift';
+const rangeLabel = () => st.from === st.to ? fmtDate(st.from) : `${fmtDate(st.from)} – ${fmtDate(st.to)}`;
+
+async function initDashboard() {
+  if (st.from) { $('dashEmpty').classList.add('hidden'); $('dashBody').classList.remove('hidden'); return load(); }
+  let summary;
+  try { summary = await api('summary'); }
+  catch (e) {
+    $('dashEmpty').classList.remove('hidden'); $('dashBody').classList.add('hidden');
+    $('dashEmptyMsg').textContent = 'Could not load data: ' + e.message; return;
+  }
+  const dates = Object.keys(summary).sort(), has = dates.length > 0;
+  $('dashEmpty').classList.toggle('hidden', has);
+  $('dashBody').classList.toggle('hidden', !has);
+  if (!has) return;
+  st.latest = dates[dates.length - 1];
+  setPreset('latest');
+}
+
+function setPreset(p) {
+  const L = toDate(st.latest); let f, t;
+  if (p === 'latest') { f = t = L; }
+  else if (p === 'yesterday') { const y = new Date(); y.setDate(y.getDate() - 1); f = t = y; }
+  else if (p === '7') { t = L; f = new Date(L); f.setDate(f.getDate() - 6); }
+  else { t = L; f = new Date(L.getFullYear(), L.getMonth(), 1); }
+  $('dFrom').value = iso(f); $('dTo').value = iso(t);
+  document.querySelectorAll('#presets .chip').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  load();
+}
+
+async function load() {
+  st.from = $('dFrom').value; st.to = $('dTo').value;
+  if (!st.from || !st.to || st.from > st.to) return showStatus('Pick a valid date range.', true);
+  const id = ++st.loadId;
+  showStatus('Loading…');
+  try {
+    const r = await api('trips', {query: {from: st.from, to: st.to}});
+    if (id !== st.loadId) return;
+    st.trips = r.trips;
+  } catch (e) { if (id === st.loadId) showStatus('Could not load data: ' + e.message, true); return; }
+  const dm = new Map();
+  for (const t of st.trips) {
+    const k = t[0] + '|' + t[2] + '|' + t[3] + '|' + t[1];
+    const m = dm.get(k) || {d: t[0], w: t[2], v: t[3], s: t[1], t: 0, n: 0};
+    m.t++; m.n += t[4]; dm.set(k, m);
+  }
+  st.days = [...dm.values()];
+  showStatus(st.trips.length ? '' : 'No data for this date range.', !st.trips.length);
+  fillWards(); render();
+}
+
+function fillWards() {
+  const wards = [...new Set(st.days.map(r => r.w))].sort();
+  if (st.ward && !wards.includes(st.ward)) wards.unshift(st.ward);
+  $('wardSel').innerHTML = '<option value="">All wards</option>' + wards.map(w => `<option ${w === st.ward ? 'selected' : ''}>${esc(w)}</option>`).join('');
+}
+function setWard(w) { st.ward = w; $('wardSel').value = w; render(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+function setBand(i) { st.band = st.band === i ? -1 : i; render(); }
+
+function vehicleRows() {
+  const map = new Map();
+  for (const r of st.days) {
+    if (st.shift !== 'all' && r.s !== st.shift) continue;
+    const k = r.w + '|' + r.v;
+    let m = map.get(k);
+    if (!m) { m = {ward: r.w, vehicle: r.v, shifts: new Set(), trips: 0, net: 0, byDate: new Map()}; map.set(k, m); }
+    m.shifts.add(r.s); m.trips += r.t; m.net += r.n;
+    const b = m.byDate.get(r.d) || {t: 0, n: 0}; b.t += r.t; b.n += r.n; m.byDate.set(r.d, b);
+  }
+  return [...map.values()].map(m => {
+    let below = 0; m.byDate.forEach(b => { if (b.n / b.t < T) below++; });
+    return {ward: m.ward, vehicle: m.vehicle, trips: m.trips, net: m.net, avg: m.trips ? m.net / m.trips : 0,
+      shift: [...m.shifts].sort().join(' + '), days: m.byDate.size, below};
+  });
+}
+
+function render() {
+  const allRaw = vehicleRows();
+  const inBand = r => st.band < 0 || bandOf(r.avg) === st.band;
+  const wardRows = st.ward ? allRaw.filter(r => r.ward === st.ward) : allRaw;
+  st.rows = wardRows.filter(inBand);
+  st.keySet = new Set(st.rows.map(r => r.ward + '|' + r.vehicle));
+  renderCrumb(); renderKpis(st.rows); renderWardChart(allRaw.filter(inBand)); renderBands(wardRows); renderTrend(); renderTable();
+}
+
+function renderCrumb() {
+  const wardTag = st.ward
+    ? `<span class="tag"><i class="ti ti-map-pin"></i>${esc(st.ward)}<button id="clrW" aria-label="Clear ward"><i class="ti ti-x"></i></button></span>`
+    : `<span class="crumb-text">All wards</span>`;
+  const bandTag = st.band >= 0
+    ? `<span class="tag" style="background:${BANDS[st.band][3]}22;color:#1d2433"><i class="ti ti-filter"></i>${BANDS[st.band][0]} kg vehicles<button id="clrB" aria-label="Clear band"><i class="ti ti-x"></i></button></span>`
+    : '';
+  $('crumb').innerHTML = `${wardTag}${bandTag}<span class="crumb-text">· ${shiftLabel()} · ${rangeLabel()}</span>`;
+  const w = $('clrW'); if (w) w.onclick = () => setWard('');
+  const b = $('clrB'); if (b) b.onclick = () => setBand(st.band);
+}
+
+function renderKpis(rows) {
+  const trips = sum(rows, 'trips'), net = sum(rows, 'net'), avg = trips ? net / trips : 0;
+  const veh = new Set(rows.map(r => r.vehicle)).size;
+  const low = new Set(rows.filter(r => r.avg < T).map(r => r.vehicle)).size;
+  const pct = veh ? low / veh * 100 : 0;
+  const cards = [
+    ['ti-truck','Vehicles',fmt(veh),'blue'],
+    ['ti-route','Total trips',fmt(trips),'purple'],
+    ['ti-weight','Net weight',(net/1000).toLocaleString('en-IN',{maximumFractionDigits:1})+' t','teal'],
+    ['ti-scale','Avg kg / trip',fmt(avg),avg >= T ? 'green' : 'red'],
+    ['ti-alert-triangle','Below 750 kg',fmt(low),'red'],
+    ['ti-percentage','Below 750 share',pct.toFixed(1)+'%','red'],
+  ];
+  $('kpis').innerHTML = cards.map(([i,l,v,c]) => `<div class="kpi ${c}"><div class="kpi-icon"><i class="ti ${i}"></i></div><div><div class="kpi-label">${l}</div><div class="kpi-value">${v}</div></div></div>`).join('');
+}
+
+function renderWardChart(all) {
+  const wards = [...new Set(all.map(r => r.ward))].sort();
+  const avgs = wards.map(w => { const x = all.filter(r => r.ward === w), t = sum(x, 'trips'); return t ? Math.round(sum(x, 'net') / t) : 0; });
+  const colors = avgs.map((v, i) => st.ward && wards[i] !== st.ward ? '#d3d1c7' : v >= T ? '#1baf7a' : '#e34948');
+  $('wardBox').style.height = Math.max(260, wards.length * 34 + 60) + 'px';
+  mkChart('wardChart', {
+    type: 'bar',
+    data: {labels: wards, datasets: [{data: avgs, backgroundColor: colors, borderRadius: 4, barThickness: 18}]},
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      onClick: (e, el) => { if (el.length) { const w = wards[el[0].index]; setWard(st.ward === w ? '' : w); } },
+      onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+      plugins: {legend: {display: false}, tooltip: {callbacks: {label: c => fmt(c.raw) + ' kg/trip · click to open'}}},
+      scales: {x: {suggestedMin: 500, suggestedMax: 950, grid: {color: '#eceae4'}}, y: {grid: {display: false}, ticks: {autoSkip: false}}}
+    },
+    plugins: [targetLine('x')]
+  });
+}
+
+function renderBands(rows) {
+  const counts = BANDS.map((b, i) => rows.filter(r => bandOf(r.avg) === i).length);
+  const total = rows.length;
+  $('bandHint').textContent = `Click a bar to see those vehicles · ${st.ward || 'All wards'} · ${shiftLabel()}`;
+  mkChart('bandChart', {
+    type: 'bar',
+    data: {labels: BANDS.map(b => b[0] + ' kg'), datasets: [{
+      data: counts,
+      backgroundColor: BANDS.map((b, i) => st.band >= 0 && i !== st.band ? '#d3d1c7' : b[3]),
+      hoverBorderColor: '#1d2433', hoverBorderWidth: 2, borderRadius: 6, maxBarThickness: 56}]},
+    options: {responsive: true, maintainAspectRatio: false,
+      onClick: (e, el) => { if (el.length) setBand(el[0].index); },
+      onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+      plugins: {legend: {display: false}, tooltip: {displayColors: false, callbacks: {
+        title: c => `${c[0].label} per trip`,
+        label: c => [
+          `${c.raw} vehicle${c.raw === 1 ? '' : 's'}`,
+          `${total ? (c.raw / total * 100).toFixed(1) : 0}% of all vehicles`,
+          st.band === c.dataIndex ? 'Click again to show all' : 'Click to see these vehicles']}}},
+      scales: {y: {beginAtZero: true, grace: '12%', ticks: {precision: 0}, grid: {color: '#eceae4'}}, x: {grid: {display: false}}}},
+    plugins: [barLabels]
+  });
+}
+
+function renderTrend() {
+  const per = new Map();
+  for (const r of st.days) {
+    if (st.shift !== 'all' && r.s !== st.shift) continue;
+    if (st.ward && r.w !== st.ward) continue;
+    if (st.band >= 0 && !st.keySet.has(r.w + '|' + r.v)) continue;
+    let m = per.get(r.d); if (!m) { m = new Map(); per.set(r.d, m); }
+    const k = r.w + '|' + r.v, x = m.get(k) || {t: 0, n: 0}; x.t += r.t; x.n += r.n; m.set(k, x);
+  }
+  const dates = [...per.keys()].sort();
+  trendMeta = dates.map(d => { let t = 0, n = 0, below = 0; per.get(d).forEach(x => { t += x.t; n += x.n; if (x.n / x.t < T) below++; }); return {t, n, below, veh: per.get(d).size}; });
+  const avg = trendMeta.map(m => m.t ? Math.round(m.n / m.t) : null);
+  mkChart('trendChart', {
+    type: 'line',
+    data: {labels: dates.map(d => toDate(d).toLocaleDateString('en-IN', {day: '2-digit', month: 'short'})),
+      datasets: [{data: avg, borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.08)', fill: true, tension: 0.3, borderWidth: 2,
+        pointRadius: 5, pointBackgroundColor: avg.map(v => v < T ? '#e34948' : '#1baf7a'), pointBorderColor: '#fff', pointBorderWidth: 2}]},
+    options: {responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display: false}, tooltip: {callbacks: {label: c => [`Avg ${fmt(c.raw)} kg/trip`, `Below 750: ${trendMeta[c.dataIndex].below} of ${trendMeta[c.dataIndex].veh} vehicles`]}}},
+      scales: {y: {suggestedMin: 600, suggestedMax: 900, grid: {color: '#eceae4'}}, x: {grid: {display: false}}}},
+    plugins: [targetLine('y')]
+  });
+}
+
+function renderTable() {
+  const q = st.search.trim().toLowerCase();
+  const banded = st.band >= 0;
+  st.lowRows = st.rows.filter(r => (banded || r.avg < T) && (!q || r.vehicle.toLowerCase().includes(q) || r.ward.toLowerCase().includes(q))).sort((a, b) => a.avg - b.avg);
+  $('tblTitle').textContent = banded
+    ? `Vehicles averaging ${BANDS[st.band][0]} kg · ${st.ward || 'all wards'} (${st.lowRows.length})`
+    : `Below 750 kg vehicles · ${st.ward || 'all wards'} (${st.lowRows.length})`;
+  $('tbody').innerHTML = st.lowRows.length ? st.lowRows.map((r, i) => `<tr>
+    <td>${i+1}</td>
+    <td><a class="link ward-link" data-w="${esc(r.ward)}">${esc(r.ward)}</a></td>
+    <td class="mono"><a class="link veh-link" data-w="${esc(r.ward)}" data-v="${esc(r.vehicle)}">${esc(r.vehicle)}</a></td>
+    <td>${r.shift}</td>
+    <td class="num">${fmt(r.trips)}</td><td class="num">${fmt(r.net)}</td><td class="num">${fmt(r.avg)}</td>
+    <td class="num">${r.avg < T
+      ? `<span class="pill ${r.avg < 600 ? 'bad' : 'warn'}">−${fmt(T - r.avg)} kg</span>`
+      : `<span class="pill good">+${fmt(r.avg - T)} kg</span>`}</td>
+    <td class="num">${r.below} / ${r.days}</td></tr>`).join('')
+    : `<tr><td colspan="9" class="empty">${banded ? 'No vehicles in this band for this selection.' : 'No vehicles below 750 kg for this selection.'}</td></tr>`;
+}
+
+/* ---------- Vehicle detail ---------- */
+function openVehicle(w, v) {
+  const trips = st.trips.filter(t => t[2] === w && t[3] === v && (st.shift === 'all' || t[1] === st.shift))
+    .sort((a, b) => (a[0] + a[5]).localeCompare(b[0] + b[5]));
+  const net = trips.reduce((s, t) => s + t[4], 0), avg = trips.length ? net / trips.length : 0;
+  $('mTitle').innerHTML = `<i class="ti ti-truck"></i> ${esc(v)} · ${esc(w)}`;
+  $('mBody').innerHTML = `
+    <div class="chips">
+      <span class="mini">${rangeLabel()} · ${shiftLabel()}</span>
+      <span class="mini">Trips <b>${trips.length}</b></span>
+      <span class="mini">Net <b>${fmt(net)} kg</b></span>
+      <span class="mini">Avg <b style="color:${avg < T ? 'var(--red)' : 'var(--green)'}">${fmt(avg)} kg/trip</b></span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Shift</th><th>Time</th><th class="num">Net kg</th></tr></thead>
+      <tbody>${trips.map(t => `<tr><td>${fmtDate(t[0])}</td><td><span class="pill ${t[1] === 'Night' ? 'night' : 'day'}">${t[1]}</span></td><td class="mono">${t[5]}</td>
+        <td class="num" style="color:${t[4] < T ? 'var(--red)' : 'var(--green)'}">${fmt(t[4])}</td></tr>`).join('')}</tbody>
+    </table></div>`;
+  $('modal').classList.remove('hidden');
+}
+const closeModal = () => $('modal').classList.add('hidden');
+$('mClose').onclick = closeModal;
+$('modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* ---------- Export ---------- */
+function exportExcel() {
+  if (!st.rows.length) return alert('No data to export for this selection.');
+  const toRow = (r, i) => ({'#': i+1, 'Ward': r.ward, 'Vehicle No': r.vehicle, 'Shift': r.shift, 'Trips': r.trips, 'Net KG': Math.round(r.net),
+    'Avg KG/Trip': Math.round(r.avg), 'vs 750 KG': Math.round(r.avg - T), 'Days Below 750': r.below, 'Days Worked': r.days});
+  const trips = st.trips.filter(t => (st.shift === 'all' || t[1] === st.shift) && (!st.ward || t[2] === st.ward) && (st.band < 0 || st.keySet.has(t[2] + '|' + t[3])))
+    .sort((a, b) => (a[0] + a[2] + a[3] + a[5]).localeCompare(b[0] + b[2] + b[3] + b[5]))
+    .map(t => ({'Date': t[0], 'Shift': t[1], 'Time': t[5], 'Ward': t[2], 'Vehicle No': t[3], 'Net KG': t[4]}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(st.lowRows.map(toRow)), st.band >= 0 ? `Band ${st.band + 1}` : 'Below 750');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([...st.rows].sort((a, b) => a.ward.localeCompare(b.ward) || a.avg - b.avg).map(toRow)), 'All vehicles');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trips), 'All trips');
+  XLSX.writeFile(wb, `AMC_North_SWM_${st.from}_to_${st.to}${st.ward ? '_' + st.ward.replace(/\s+/g, '_') : ''}_${st.shift}.xlsx`);
+}
+
+document.querySelectorAll('#presets .chip').forEach(b => b.onclick = () => setPreset(b.dataset.p));
+['dFrom','dTo'].forEach(id => $(id).onchange = () => { document.querySelectorAll('#presets .chip').forEach(b => b.classList.remove('on')); load(); });
+document.querySelectorAll('#shiftSeg button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#shiftSeg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); st.shift = b.dataset.s; render();
+});
+$('wardSel').onchange = e => setWard(e.target.value);
+$('search').oninput = e => { st.search = e.target.value; renderTable(); };
+$('tbody').onclick = e => {
+  const v = e.target.closest('.veh-link'); if (v) return openVehicle(v.dataset.w, v.dataset.v);
+  const a = e.target.closest('.ward-link'); if (a) setWard(a.dataset.w);
+};
+$('btnExcel').onclick = exportExcel;
+$('btnPrint').onclick = () => window.print();
+
+/* =====================================================
+   PDF READER — AMC weighbridge reports
+   A1 = Naroda TS (Out time, In time, Gross, Tare, Net)
+   A2 = Naroda TS (In Time, Wet, Dry, Total)
+   B  = India Colony RTS "Log / Bok Statement" (ward-wise & agency-wise)
+   Shift is NOT decided here — the operator chooses Day / Night at upload.
+   ===================================================== */
+async function pdfText(file) {
+  const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+  const parts = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const tc = await (await pdf.getPage(p)).getTextContent();
+    for (const it of tc.items) { if (it.str) parts.push(it.str); parts.push(it.hasEOL ? '\n' : ' '); }
+    parts.push('\n');
+  }
+  return parts.join('');
+}
+
+function detectFormat(t) {
+  if (/Bok Statement|Ward_Name\s*:-|Final\s+NetWt/i.test(t)) return 'B';
+  if (/Slip id/i.test(t) && /\bWet\b/.test(t) && /\bDry\b/.test(t)) return 'A2';
+  if (/Slip id/i.test(t) && /\bGross\b/.test(t) && /\bTare\b/.test(t) && /\bNet\b/.test(t)) return 'A1';
+  return null;
+}
+const FORMAT_LABEL = {A1: 'Naroda TS · Gross/Tare/Net', A2: 'Naroda TS · Wet/Dry/Total', B: 'India Colony RTS · Log/Bok'};
+
+function normWard(s) {
+  const w = String(s || '').toUpperCase().replace(/\s+/g, ' ').trim().replace(/,?\s*NORTH$/, '').replace(/,$/, '').trim();
+  return WARD_NAMES[w.replace(/[^A-Z0-9]/g, '')] || w || 'UNKNOWN';
+}
+const lastBefore = (arr, i) => { let r = null; for (const a of arr) { if (a.i < i) r = a; else break; } return r; };
+
+const TIME_ANY = /\d{1,2}:\d{2}:(?:\d{2}|\d(?:\s+\d(?!\d))?)\s*(?:[AP]M)?/g;
+
+function findWetDryNet(c) {
+  const wetGuess = c[0] - c[1];
+  for (const strict of [true, false])
+    for (let k = 2; k < c.length; k++)
+      for (let i = 0; i < k - 1; i++)
+        for (let j = i + 1; j < k; j++)
+          if (c[i] + c[j] === c[k] && c[k] > 0 && c[i] < 2000 && c[j] < 2000 &&
+              (strict ? (c[i] === wetGuess || c[j] === wetGuess) : c[k] < 4000)) return c[k];
+  return null;
+}
+
+function rtsTime(seg) {
+  const tm = seg.match(/(\d{1,2}):(\d{2}):(\d{2}|\d(?:\s+\d(?!\d))?)/);
+  if (!tm) return null;
+  let hh = +tm[1];
+  const mm = +tm[2], ss = +tm[3].replace(/\s+/g, '');
+  const after = seg.slice(tm.index + tm[0].length);
+  let ap = (after.match(/^\s*([AP])M/) || [])[1];
+  if (!ap) {
+    if (hh === 12 || (hh >= 1 && hh <= 7)) ap = 'P';
+    else ap = (after.match(/([AP])M/) || [])[1] || 'A';
+  }
+  if (ap === 'P' && hh < 12) hh += 12;
+  if (ap === 'A' && hh === 12) hh = 0;
+  return {hh, mm, ss};
+}
+
+function parseReport(raw) {
+  const t = raw.replace(/\s+/g, ' ');
+  const f = detectFormat(t);
+  if (!f) return {error: 'Unknown report format. Expected a Naroda Transfer Station report or an India Colony RTS Log/Bok statement.', raw};
+  const res = {format: f, label: FORMAT_LABEL[f], raw, trips: [], warn: []};
+
+  const ct = t.match(/Contract_Type\s*:-\s*([^,]+),/);
+  if (ct && !/DOOR/i.test(ct[1])) return {...res, error: `Contract type is "${ct[1].trim()}", not door-to-door.`};
+
+  const hd = t.match(/Date\s*:-?\s*(\d{2})\/(\d{2})\/(\d{4})/);
+  const headerDate = hd ? `${hd[3]}-${hd[2]}-${hd[1]}` : null;
+  const headerWard = f === 'B' ? ((t.match(/Ward_Name\s*:-\s*([^,]+?)\s*(?:,|Date\s*:-)/) || [])[1] || '') : '';
+
+  const dates = [...t.matchAll(/(?<![\d\/])(\d{2})\/(\d{2})\/(\d{4})(?= (?:Vehicle Group|[A-Z]{3}|\d{5,8} [A-Z]{2}\d{2}))/g)].map(m => ({i: m.index, d: `${m[3]}-${m[2]}-${m[1]}`}));
+  const groups = f === 'B' ? [] : [...t.matchAll(/Vehicle Group\s*:\s*([A-Z][A-Z ]*?)(?= \d| Day Total| Vendor|$)/g)].map(m => ({i: m.index, name: m[1]}));
+  const vehs = [...t.matchAll(/\b([A-Z]{2}\d{2}[A-Z]{1,3}\d{3,4})\b/g)];
+
+  let bad = 0, mathWarn = 0, otherGroup = 0, example = '';
+  const note = seg => { if (!example) example = seg.slice(0, 140); };
+
+  vehs.forEach((m, i) => {
+    const v = m[1], seg = t.slice(m.index, i + 1 < vehs.length ? vehs[i + 1].index : t.length);
+    if (groups.length) { const g = lastBefore(groups, m.index); if (g && !/DOOR/.test(g.name)) { otherGroup++; return; } }
+    const date = (lastBefore(dates, m.index) || {}).d || headerDate;
+    if (!date) { bad++; note(seg); return; }
+    let ward, hh, mm, ss, net;
+
+    if (f === 'A1' || f === 'A2') {
+      const r = f === 'A1'
+        ? seg.match(/^\S+\s+(.*?)\s*\d{1,2}:\d{2}:\d{2}\s+(\d{1,2}):(\d{2}):(\d{2})\s+(\d+)\s+(\d+)\s+(\d+)/)
+        : seg.match(/^\S+\s+(.*?)\s*(\d{1,2}):(\d{2}):(\d{2})\s+(\d+)\s+(\d+)\s+(\d+)/);
+      if (!r) { bad++; note(seg); return; }
+      ward = r[1]; hh = +r[2]; mm = +r[3]; ss = +r[4];
+      const a = +r[5], b = +r[6], c = +r[7];
+      if (f === 'A1') { net = c; if (a - b !== c) { mathWarn++; note(seg); } }
+      else if (a + b === c) net = c;
+      else if (r[5].length > r[6].length && r[5].startsWith(r[6])) net = b;
+      else { net = c; mathWarn++; note(seg); }
+    } else {
+      const tm = rtsTime(seg);
+      if (!tm) { bad++; note(seg); return; }
+      ({hh, mm, ss} = tm);
+      const n = (seg.slice(v.length).replace(TIME_ANY, ' ').match(/\d+/g) || []).map(Number).slice(0, 10);
+      net = n.length >= 3 ? findWetDryNet(n) : null;
+      if (net === null) {
+        if (n.length < 3) { bad++; note(seg); return; }
+        net = n[5] !== undefined ? n[5] : n[2]; mathWarn++; note(seg);
+      }
+      ward = headerWard;
+    }
+
+    const time = `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+    res.trips.push([date, '', normWard(ward), v, net, time, `${v}|${date}|${time}`]);
+  });
+
+  let foot = null;
+  if (f === 'B') {
+    const ti = t.search(/\bTotal\b/);
+    if (ti >= 0) {
+      const z = (t.slice(Math.max(0, ti - 80)).match(/\d+/g) || []).map(Number);
+      let best = 0;
+      for (let k = 0; k < z.length; k++)
+        for (let i = 0; i < z.length; i++)
+          for (let j = i + 1; j < z.length; j++)
+            if (i !== k && j !== k && z[i] > 0 && z[j] > 0 && z[i] + z[j] === z[k] && z[k] > best) best = z[k];
+      if (best) foot = {net: best, trips: z.filter(x => x < 1000).includes(res.trips.length) ? res.trips.length : '?'};
+    }
+  } else {
+    const a = t.match(/Vendor Total\s*Vehicles\s*:\s*(\d+)\s*Trips\s*:\s*(\d+)((?:\s+\d+){1,3})/)
+           || t.match(/Day Total\s*\(?[\d\/]*\)?\s*Vehicles\s*:\s*(\d+)\s*Trips\s*:\s*(\d+)((?:\s+\d+){1,3})/);
+    if (a) {
+      const nums = a[3].trim().split(/\s+/).map(Number);
+      const net = f === 'A1' ? nums[0] : (nums.length >= 3 && nums[0] + nums[1] === nums[2] ? nums[2] : nums[nums.length - 1]);
+      foot = {vehicles: +a[1], trips: +a[2], net};
+    }
+  }
+
+  if (!res.trips.length) return {...res, error: 'No trips found in this report.' + (example ? ' Example text: ' + example : '')};
+  const times = res.trips.map(x => x[5]).sort();
+  res.tmin = times[0].slice(0, 5); res.tmax = times[times.length - 1].slice(0, 5);
+  res.net = res.trips.reduce((s, x) => s + x[4], 0);
+  res.wards = [...new Set(res.trips.map(x => x[2]))];
+  res.dates = [...new Set(res.trips.map(x => x[0]))].sort();
+  res.footer = foot;
+  res.match = foot ? ((foot.trips === '?' || foot.trips === res.trips.length) && foot.net === res.net) : null;
+  if (bad) res.warn.push(`${bad} row(s) could not be read.`);
+  if (mathWarn) res.warn.push(`${mathWarn} row(s) where Wet + Dry = Net could not be found.`);
+  if (otherGroup) res.warn.push(`${otherGroup} non door-to-door trip(s) skipped.`);
+  if (res.wards.includes('UNKNOWN')) res.warn.push('Ward name not found for some trips.');
+  if (example && (bad || mathWarn)) res.warn.push('Example row text: ' + example);
+  return res;
+}
+
+/* =====================================================
+   UPLOAD PAGE
+   ===================================================== */
+const up = {files: []};
+const tripsOf = f => f.trips.map(t => [t[0], f.shift, t[2], t[3], t[4], t[5], t[6]]);
+
+function initUpload() {
+  const ok = !!sessionStorage.getItem('amc_key');
+  $('lockBox').classList.toggle('hidden', ok);
+  $('uploadArea').classList.toggle('hidden', !ok);
+  if (ok) { renderUploads(); renderHistory(); } else setTimeout(() => $('pwd').focus(), 50);
+}
+$('lockForm').onsubmit = async e => {
+  e.preventDefault();
+  const pw = $('pwd').value; if (!pw) return;
+  $('pwdErr').textContent = 'Checking…';
+  sessionStorage.setItem('amc_key', pw);
+  try { await api('login', {method: 'POST'}); $('pwd').value = ''; $('pwdErr').textContent = ''; initUpload(); }
+  catch (err) { sessionStorage.removeItem('amc_key'); $('pwdErr').textContent = err.status === 401 ? 'Wrong password. Try again.' : 'Could not connect: ' + err.message; }
+};
+$('pwd').oninput = () => $('pwdErr').textContent = '';
+$('lockBtn').onclick = () => { sessionStorage.removeItem('amc_key'); initUpload(); };
+
+['Day', 'Night'].forEach(shift => {
+  const input = $('file' + shift), drop = $('drop' + shift);
+  input.onchange = () => { addFiles([...input.files], shift); input.value = ''; };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave = () => drop.classList.remove('over');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files], shift); };
+});
+
+async function addFiles(list, shift) {
+  $('saveMsg').textContent = '';
+  for (const file of list) {
+    const existing = up.files.find(x => x.name === file.name && x.size === file.size);
+    if (existing) { existing.shift = shift; renderUploads(); continue; }
+    const entry = {name: file.name, size: file.size, shift, loading: true};
+    up.files.push(entry); renderUploads();
+    if (!/\.pdf$/i.test(file.name)) { Object.assign(entry, {loading: false, error: 'Not a PDF file.'}); renderUploads(); continue; }
+    try { Object.assign(entry, parseReport(await pdfText(file))); }
+    catch (err) { entry.error = 'Could not read this PDF: ' + err.message; }
+    entry.loading = false; renderUploads();
+  }
+}
+
+function checkCell(f) {
+  if (f.loading) return '<span class="small">Reading…</span>';
+  if (f.error) return `<span class="pill bad"><i class="ti ti-x"></i> ${esc(f.error)}</span>`;
+  if (f.match === true) return `<span class="pill good"><i class="ti ti-check"></i> Matches report total</span>`;
+  if (f.match === false) return `<span class="pill warn"><i class="ti ti-alert-triangle"></i> Report says ${f.footer.trips} trips · ${fmt(f.footer.net)} kg</span>`;
+  return '<span class="pill warn"><i class="ti ti-help"></i> No report total found</span>';
+}
+
+function renderUploads() {
+  const files = up.files;
+  if (!files.length) { $('fileOut').innerHTML = ''; return; }
+  const ok = files.filter(f => !f.loading && !f.error);
+  const seen = new Map(); let dup = 0;
+  ok.forEach(f => tripsOf(f).forEach(t => { if (seen.has(t[6])) dup++; seen.set(t[6], t); }));
+  const uniq = [...seen.values()];
+
+  const sm = new Map();
+  for (const t of uniq) {
+    const k = t[0] + '|' + t[1];
+    const m = sm.get(k) || {d: t[0], s: t[1], wards: new Set(), veh: new Map(), trips: 0, net: 0};
+    m.wards.add(t[2]); m.trips++; m.net += t[4];
+    const vk = t[2] + '|' + t[3], x = m.veh.get(vk) || {t: 0, n: 0}; x.t++; x.n += t[4]; m.veh.set(vk, x);
+    sm.set(k, m);
+  }
+  const summary = [...sm.values()].sort((a, b) => a.d.localeCompare(b.d) || b.s.localeCompare(a.s));
+  const problems = files.filter(f => !f.loading && (f.error || f.match === false || (f.warn && f.warn.length)));
+  const nDay = files.filter(f => f.shift === 'Day').length, nNight = files.length - nDay;
+
+  $('fileOut').innerHTML = `
+    <div class="chips">
+      <span class="mini">Files <b>${ok.length} / ${files.length}</b> read</span>
+      <span class="mini"><i class="ti ti-sun"></i> Day files <b>${nDay}</b></span>
+      <span class="mini"><i class="ti ti-moon"></i> Night files <b>${nNight}</b></span>
+      <span class="mini">Trips <b>${fmt(uniq.length)}</b></span>
+      <span class="mini">Net <b>${fmt(uniq.reduce((s, t) => s + t[4], 0))} kg</b></span>
+      ${dup ? `<span class="mini">Duplicate trips skipped <b>${dup}</b></span>` : ''}
+    </div>
+    <div class="section-title">Files</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>File</th><th>Shift</th><th>Report type</th><th>Ward</th><th>Date</th><th class="num">Trips</th><th>Times</th><th class="num">Net kg</th><th>Check</th><th></th></tr></thead>
+      <tbody>${files.map((f, i) => `<tr>
+        <td>${esc(f.name)}</td>
+        <td><select class="shift-sel" data-sh="${i}"><option ${f.shift === 'Day' ? 'selected' : ''}>Day</option><option ${f.shift === 'Night' ? 'selected' : ''}>Night</option></select></td>
+        <td class="small">${f.label || '—'}</td>
+        <td>${f.wards ? esc(f.wards.join(', ')) : '—'}</td>
+        <td>${f.dates ? f.dates.map(fmtDate).join(', ') : '—'}</td>
+        <td class="num">${f.trips && !f.error ? f.trips.length : '—'}</td>
+        <td class="mono">${f.tmin ? `${f.tmin}–${f.tmax}` : '—'}</td>
+        <td class="num">${f.net ? fmt(f.net) : '—'}</td>
+        <td>${checkCell(f)}</td>
+        <td><button class="icon-btn" data-rm="${i}" aria-label="Remove file"><i class="ti ti-x"></i></button></td></tr>`).join('')}</tbody>
+    </table></div>
+    ${summary.length ? `<div class="section-title">What will be saved</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Shift</th><th class="num">Wards</th><th class="num">Vehicles</th><th class="num">Trips</th><th class="num">Net kg</th><th class="num">Avg / trip</th><th class="num">Below 750</th></tr></thead>
+      <tbody>${summary.map(m => { let low = 0; m.veh.forEach(x => { if (x.n / x.t < T) low++; }); const avg = m.net / m.trips;
+        return `<tr><td>${fmtDate(m.d)}</td><td><span class="pill ${m.s === 'Night' ? 'night' : 'day'}">${m.s}</span></td>
+        <td class="num" title="${esc([...m.wards].sort().join(', '))}">${m.wards.size}</td><td class="num">${m.veh.size}</td>
+        <td class="num">${fmt(m.trips)}</td><td class="num">${fmt(m.net)}</td>
+        <td class="num" style="color:${avg < T ? 'var(--red)' : 'var(--green)'}">${fmt(avg)}</td><td class="num">${low}</td></tr>`; }).join('')}</tbody>
+    </table></div>` : ''}
+    ${problems.length ? `<div class="section-title">Needs attention</div>` + problems.map(f => `
+      <div class="warn-box"><b>${esc(f.name)}</b>${(f.warn || []).map(w => `<br>• ${esc(w)}`).join('')}${f.match === false ? `<br>• Read ${f.trips.length} trips · ${fmt(f.net)} kg, but the report total is ${f.footer.trips} trips · ${fmt(f.footer.net)} kg.` : ''}
+      ${f.raw ? `<details><summary>Show extracted text — send this to the developer</summary><pre>${esc(f.raw.split('\n').slice(0, 80).join('\n'))}</pre></details>` : ''}</div>`).join('') : ''}
+  `;
+}
+$('fileOut').onclick = e => { const b = e.target.closest('button[data-rm]'); if (b) { up.files.splice(+b.dataset.rm, 1); renderUploads(); } };
+$('fileOut').onchange = e => { const s = e.target.closest('select[data-sh]'); if (s) { up.files[+s.dataset.sh].shift = s.value; renderUploads(); } };
+
+function msg(t, bad = false) { $('saveMsg').textContent = t; $('saveMsg').className = 'msg ' + (bad ? 'bad' : 'ok'); }
+$('resetBtn').onclick = () => { up.files = []; renderUploads(); $('saveMsg').textContent = ''; };
+
+$('saveBtn').onclick = async () => {
+  if (up.files.some(f => f.loading)) return msg('Please wait until all files are read.', true);
+  const ok = up.files.filter(f => !f.error && f.trips && f.trips.length);
+  if (!ok.length) return msg('Add at least one report PDF that was read correctly.', true);
+  const map = new Map();
+  for (const f of ok) for (const t of tripsOf(f)) map.set(t[6], t);
+  const trips = [...map.values()];
+  const files = ok.map(f => ({f: f.name, shift: f.shift, dates: f.dates, n: f.trips.length}));
+  $('saveBtn').disabled = true; msg(`Saving ${fmt(trips.length)} trips…`);
+  try {
+    const r = await api('save', {method: 'POST', body: {trips, files}});
+    msg(`Saved ${fmt(r.added)} new trips${r.updated ? ` (${fmt(r.updated)} already existed and were updated)` : ''}.`);
+    up.files = []; renderUploads(); renderHistory(); st.from = '';
+  } catch (e) {
+    msg('Save failed: ' + e.message + (e.status === 401 ? ' — please Lock and log in again.' : ''), true);
+  } finally { $('saveBtn').disabled = false; }
+};
+
+async function renderHistory() {
+  let s;
+  try { s = await api('summary'); }
+  catch (e) { $('histBody').innerHTML = `<tr><td colspan="9" class="empty">Could not load: ${esc(e.message)}</td></tr>`; return; }
+  const dates = Object.keys(s).sort().reverse();
+  $('histBody').innerHTML = dates.length ? dates.map(d => { const m = s[d], trips = m.N + m.D, avg = trips ? m.net / trips : 0;
+    return `<tr><td>${fmtDate(d)}</td>
+      <td class="num" title="${esc((m.wards || []).join(', '))}">${(m.wards || []).length}</td><td class="num">${m.vehicles}</td>
+      <td class="num">${fmt(m.N)}</td><td class="num">${fmt(m.D)}</td><td class="num">${fmt(m.net)}</td>
+      <td class="num" style="color:${avg < T ? 'var(--red)' : 'var(--green)'}">${fmt(avg)}</td>
+      <td class="num">${m.files}</td>
+      <td><button class="icon-btn" data-del="${d}" aria-label="Delete date"><i class="ti ti-trash"></i></button></td></tr>`; }).join('')
+    : '<tr><td colspan="9" class="empty">No data saved yet.</td></tr>';
+  const total = dates.reduce((a, d) => a + s[d].N + s[d].D, 0);
+  $('storageInfo').textContent = `${dates.length} days · ${fmt(total)} trips saved online`;
+}
+$('histBody').onclick = async e => {
+  const b = e.target.closest('button[data-del]'); if (!b) return;
+  const d = b.dataset.del;
+  if (!confirm(`Delete all data for ${fmtDate(d)}? This cannot be undone.`)) return;
+  try { await api('date', {method: 'DELETE', query: {date: d}}); msg(`Deleted data for ${fmtDate(d)}.`); renderHistory(); st.from = ''; }
+  catch (err) { msg('Delete failed: ' + err.message, true); }
+};
+$('clearBtn').onclick = async () => {
+  const ans = prompt('This deletes ALL saved data for everyone. Type DELETE to confirm.');
+  if (ans !== 'DELETE') return;
+  try { await api('all', {method: 'DELETE'}); msg('All data cleared.'); renderHistory(); st.from = ''; }
+  catch (err) { msg('Clear failed: ' + err.message, true); }
+};
+
+/* ================= START ================= */
+route();
+</script>
+</body>
+</html>
