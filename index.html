@@ -21,6 +21,7 @@ body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:
 .top-actions{display:flex;gap:8px}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;padding:8px 14px;border-radius:10px;font:500 14px Inter,sans-serif;cursor:pointer;text-decoration:none}
 .btn:hover{background:rgba(255,255,255,.12)}
+.btn:disabled{opacity:.6;cursor:wait}
 main{max-width:1280px;margin:0 auto;padding:20px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:18px}
 .card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -79,7 +80,6 @@ tbody tr:hover td{background:#fafbfc}
 .empty{text-align:center;color:var(--muted);padding:24px}
 .empty-state{text-align:center;padding:60px 20px}
 .empty-state i{font-size:44px;color:var(--muted)}
-.empty-state a{color:var(--blue)}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 20px 26px;border-top:1px solid var(--line);margin-top:10px}
 footer .powered{margin-top:6px;font-size:13px}
 footer .powered b{color:var(--navy);font-weight:600}
@@ -90,7 +90,7 @@ footer .powered b{color:var(--navy);font-weight:600}
 .lock form{display:flex;gap:8px;margin-top:16px}
 .lock input{flex:1}
 .err-text{color:var(--red);font-size:13px;margin-top:8px;min-height:18px}
-.btn-primary{background:var(--blue);color:#fff;border:none;padding:9px 16px;border-radius:10px;font:600 14px Inter,sans-serif;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn-primary{background:var(--blue);color:#fff;border:none;padding:9px 16px;border-radius:10px;font:600 14px Inter,sans-serif;cursor:pointer;display:inline-flex;gap:6px;align-items:center;text-decoration:none}
 .btn-primary:hover{background:#1f65b8}
 .btn-primary:disabled{opacity:.6;cursor:wait}
 .btn-ghost{background:#fff;border:1px solid var(--line);padding:7px 12px;border-radius:10px;font:500 13px Inter,sans-serif;cursor:pointer;display:inline-flex;gap:6px;align-items:center;color:var(--ink)}
@@ -276,7 +276,7 @@ details pre{max-height:260px;overflow:auto;background:#f7f8fa;padding:10px;borde
 </div>
 
 <footer>
-  <div id="footMain">AMC North Zone · Solid Waste Management · Target 750 kg per trip</div>
+  <div>AMC North Zone · Solid Waste Management · Target 750 kg per trip</div>
   <div class="powered">Powered By : <b>North Zone - Data analyst</b></div>
 </footer>
 
@@ -286,7 +286,7 @@ details pre{max-height:260px;overflow:auto;background:#f7f8fa;padding:10px;borde
 <script>
 /* ================= SETTINGS ================= */
 const T = 750;                 // target kg per trip
-const API = '/api/data';       // Netlify Function (password lives on the server)
+const API = '/api/data';       // Netlify Function (password lives on the server as UPLOAD_PASSWORD)
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 const WARD_NAMES = {
@@ -305,50 +305,9 @@ const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
 const toDate = s => new Date(s + 'T00:00:00');
 const fmtDate = s => toDate(s).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
 
-/* ================= STORAGE: Netlify (online) or TEST MODE (browser) =================
-   trip = [date, shift, ward, vehicle, netKg, time, uniqueKey]
-   TEST MODE runs automatically on GitHub Pages or when the file is opened from your computer. */
-const LOCAL = location.protocol === 'file:' || /github\.io$/.test(location.hostname);
-const LOCAL_KEY = 'amc_swm_test_v4';
-const LOCAL_PASSWORD = 'amc@123';
-
-function summarizeDay(day) {
-  let N = 0, D = 0, net = 0; const wards = new Set(), veh = new Set();
-  for (const t of day.trips) { if (t[1] === 'Night') N++; else D++; net += t[4]; wards.add(t[2]); veh.add(t[2] + '|' + t[3]); }
-  return {N, D, net, wards: [...wards].sort(), vehicles: veh.size, files: day.files.length};
-}
-
-function localApi(action, {method = 'GET', query = {}, body} = {}) {
-  const err = (m, status) => Object.assign(new Error(m), {status});
-  let db; try { db = JSON.parse(localStorage.getItem(LOCAL_KEY)) || {days: {}}; } catch { db = {days: {}}; }
-  const save = () => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(db)); } catch { throw err('Browser storage is full. Delete old dates first.', 500); } };
-
-  if (method === 'GET') {
-    if (action === 'summary') { const s = {}; for (const d in db.days) s[d] = summarizeDay(db.days[d]); return s; }
-    if (action === 'trips') return {trips: Object.keys(db.days).filter(d => d >= query.from && d <= query.to).sort().flatMap(d => db.days[d].trips)};
-    throw err('Unknown action', 400);
-  }
-  if (sessionStorage.getItem('amc_key') !== LOCAL_PASSWORD) throw err('Wrong password', 401);
-  if (action === 'login') return {ok: true};
-  if (action === 'save') {
-    let added = 0, updated = 0; const idx = {}, at = new Date().toISOString();
-    for (const t of body.trips) {
-      const d = t[0], day = db.days[d] || (db.days[d] = {trips: [], files: []});
-      const m = idx[d] || (idx[d] = new Map(day.trips.map((x, i) => [x[6], i])));
-      if (m.has(t[6])) { day.trips[m.get(t[6])] = t; updated++; }
-      else { m.set(t[6], day.trips.length); day.trips.push(t); added++; }
-    }
-    for (const f of body.files) for (const d of (f.dates || [])) if (db.days[d]) db.days[d].files.push({f: f.f, shift: f.shift, n: f.n, at});
-    save(); return {added, updated};
-  }
-  if (action === 'date') { delete db.days[query.date]; save(); return {ok: true}; }
-  if (action === 'all') { db.days = {}; save(); return {ok: true}; }
-  throw err('Unknown action', 400);
-}
-
-async function api(action, opts = {}) {
-  if (LOCAL) return localApi(action, opts);
-  const {method = 'GET', query = {}, body} = opts;
+/* ================= SERVER API (Netlify Function + Netlify Blobs) =================
+   trip = [date, shift, ward, vehicle, netKg, time, uniqueKey] */
+async function api(action, {method = 'GET', query = {}, body} = {}) {
   const qs = new URLSearchParams({action, ...query}).toString();
   const headers = {};
   const key = sessionStorage.getItem('amc_key');
@@ -358,12 +317,6 @@ async function api(action, opts = {}) {
   let data = {}; try { data = await res.json(); } catch {}
   if (!res.ok) { const e = new Error(data.error || `Server error ${res.status}`); e.status = res.status; throw e; }
   return data;
-}
-
-if (LOCAL) {
-  $('btnUp').setAttribute('href', '#/upload');
-  $('btnDash').setAttribute('href', '#/dashboard');
-  $('footMain').innerHTML = '<b style="color:#b7791f">TEST MODE</b> · running without Netlify · data is saved only in this browser · upload password: amc@123';
 }
 
 /* ================= ROUTER: /upload (or #/upload) → upload, else dashboard ================= */
@@ -416,7 +369,12 @@ const shiftLabel = () => st.shift === 'all' ? 'Combined' : st.shift + ' shift';
 const rangeLabel = () => st.from === st.to ? fmtDate(st.from) : `${fmtDate(st.from)} – ${fmtDate(st.to)}`;
 
 async function initDashboard() {
-  if (st.from) { $('dashEmpty').classList.add('hidden'); $('dashBody').classList.remove('hidden'); return load(); }
+  // After a Save, open the dashboard on the date(s) just uploaded
+  let jump = null;
+  try { jump = JSON.parse(sessionStorage.getItem('amc_jump') || 'null'); } catch {}
+  sessionStorage.removeItem('amc_jump');
+
+  if (st.from && !jump) { $('dashEmpty').classList.add('hidden'); $('dashBody').classList.remove('hidden'); return load(); }
   let summary;
   try { summary = await api('summary'); }
   catch (e) {
@@ -428,6 +386,11 @@ async function initDashboard() {
   $('dashBody').classList.toggle('hidden', !has);
   if (!has) return;
   st.latest = dates[dates.length - 1];
+  if (jump && jump[0] && jump[1]) {
+    $('dFrom').value = jump[0]; $('dTo').value = jump[1];
+    document.querySelectorAll('#presets .chip').forEach(b => b.classList.remove('on'));
+    return load();
+  }
   setPreset('latest');
 }
 
@@ -991,10 +954,14 @@ $('saveBtn').onclick = async () => {
   const trips = [...map.values()];
   const files = ok.map(f => ({f: f.name, shift: f.shift, dates: f.dates, n: f.trips.length}));
   const skipped = up.files.length - ok.length;
+  const savedDates = [...new Set(trips.map(t => t[0]))].sort();
   $('saveBtn').disabled = true; msg(`Saving ${fmt(trips.length)} trips…`);
   try {
     const r = await api('save', {method: 'POST', body: {trips, files}});
-    msg(`Saved ${fmt(r.added)} new trips${r.updated ? ` (${fmt(r.updated)} already existed and were updated)` : ''}${skipped ? ` · ${skipped} file(s) skipped` : ''}.`);
+    // next time the dashboard opens, show the date(s) just uploaded
+    sessionStorage.setItem('amc_jump', JSON.stringify([savedDates[0], savedDates[savedDates.length - 1]]));
+    const when = savedDates.length === 1 ? fmtDate(savedDates[0]) : `${fmtDate(savedDates[0])} – ${fmtDate(savedDates[savedDates.length - 1])}`;
+    msg(`Saved ${fmt(r.added)} new trips${r.updated ? ` (${fmt(r.updated)} already existed and were updated)` : ''}${skipped ? ` · ${skipped} file(s) skipped` : ''}. Click "Open dashboard" to see ${when}.`);
     up.files = []; renderUploads(); renderHistory(); st.from = '';
   } catch (e) {
     msg('Save failed: ' + e.message + (e.status === 401 ? '. Please Lock and log in again.' : ''), true);
@@ -1015,7 +982,7 @@ async function renderHistory() {
       <td><button class="icon-btn" data-del="${d}" aria-label="Delete date"><i class="ti ti-trash"></i></button></td></tr>`; }).join('')
     : '<tr><td colspan="9" class="empty">No data saved yet.</td></tr>';
   const total = dates.reduce((a, d) => a + s[d].N + s[d].D, 0);
-  $('storageInfo').textContent = `${dates.length} days · ${fmt(total)} trips saved ${LOCAL ? 'in this browser' : 'online'}`;
+  $('storageInfo').textContent = `${dates.length} days · ${fmt(total)} trips saved online`;
 }
 $('histBody').onclick = async e => {
   const b = e.target.closest('button[data-del]'); if (!b) return;
@@ -1025,7 +992,7 @@ $('histBody').onclick = async e => {
   catch (err) { msg('Delete failed: ' + err.message, true); }
 };
 $('clearBtn').onclick = async () => {
-  const ans = prompt('This deletes ALL saved data. Type DELETE to confirm.');
+  const ans = prompt('This deletes ALL saved data for everyone. Type DELETE to confirm.');
   if (ans !== 'DELETE') return;
   try { await api('all', {method: 'DELETE'}); msg('All data cleared.'); renderHistory(); st.from = ''; }
   catch (err) { msg('Clear failed: ' + err.message, true); }
